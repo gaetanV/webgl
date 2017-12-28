@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "serve": "node run.js serve",
+    "deploy": "node run.js deploy"
+  }
+}

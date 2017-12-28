@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+
+            * { margin:0; padding:0; }
+
+            html, body { width:100%; height:100%;  background:#333; }
+            canvas {
+                border: none;
+                height: 100vh;
+                width: 100vw;
+                display: block;
+            }
+        </style>
+        <script src="./script/modelBuffer.js"></script>
+        <script src="./script/scene2D.js"></script>
+    </head>
+    <body>
+        <canvas id="glCanvas"></canvas>
+
+        <script>
+
+            function getXMLHttpRequest() {
+                if (window.ActiveXObject) {
+                    try {
+                        return new ActiveXObject("Msxml2.XMLHTTP");
+                    } catch(e) {
+                        return new ActiveXObject("Microsoft.XMLHTTP");
+                    }
+                } 
+                return new XMLHttpRequest();
+            }
+
+
+            function run(circleStroke){
+                var canvas  = document.getElementById('glCanvas');
+                var SCENE2D =new scene2D(canvas);
+
+                console.time("exec");
+                function collision(){
+                    console.log(this);
+                }
+                
+                var model = new modelBuffer();
+                var id1 = model.load(circleStroke);
+
+                for(var i = 0 ; i < 1000; i++) {
+                    var x = Math.random()*canvas.width;
+                    var y = Math.random()*canvas.height;
+
+                    model.transform(
+                        id1, {
+                            color3:
+                                [
+                                    255, 125, 6,
+                                    255, 255, 255
+                                ]
+                            ,
+                            x: x,
+                            y: y,
+                            angle: 0,
+                            event:{
+                                click : collision.bind({
+                                    message: 'A superID ' + Math.random()
+                                })
+                            }
+                        }
+                    );
+                }
+                for(var i = 0 ; i < 1000; i++) {
+                    var x = Math.random()*canvas.width;
+                    var y =  Math.random()*canvas.height;
+
+                    model.transform(
+                        id1, {
+                            color3:
+                                [
+                                    0, 125, 125,
+                                    255, 255, 255
+                                ]
+                            ,
+                            x: x,
+                            y: y,
+                            angle: 0,
+                            event: {
+                                click: collision.bind({
+                                    message: 'B superID ' + Math.random()
+                                })
+                            }
+                        }
+                    );
+                }
+                console.timeEnd("exec");
+                console.time("time");
+                SCENE2D.drawBuffer(model);
+                console.timeEnd("time");
+            }
+
+            var xhr = getXMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 0)) {
+                    var circleStroke = JSON.parse(xhr.responseText);
+                    run(circleStroke);
+                }
+            };
+            xhr.open("GET", "model.json", true);
+            xhr.send(null);
+
+        </script>
+    </body>
+</html>
