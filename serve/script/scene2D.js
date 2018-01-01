@@ -7,7 +7,7 @@ class scene2D {
 
         this.buffer = [];
         this.vertex_buffer = this.gl.createBuffer();
-
+        
         this.event={
             click : [],
         };
@@ -45,11 +45,11 @@ class scene2D {
   
         this.modelProgram = this.gl.createProgram();
 
+        
         var v1 = this.gl.createShader(this.gl.VERTEX_SHADER);
         this.gl.shaderSource(v1, this.mixModelProgram[0]);
         this.gl.compileShader(v1);
         this.gl.attachShader(this.modelProgram,v1);
-
 
         var f1 = this.gl.createShader(this.gl.FRAGMENT_SHADER);
         this.gl.shaderSource(f1, this.mixModelProgram[1]);
@@ -58,6 +58,21 @@ class scene2D {
 
         this.gl.linkProgram(this.modelProgram);
         this.gl.useProgram(this.modelProgram);
+        
+  
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
+
+        var coordinates = this.gl.getAttribLocation(this.modelProgram, "coordinates");
+        this.gl.enableVertexAttribArray(coordinates);
+
+        this.gl.vertexAttribPointer(
+             coordinates,
+             2, 
+             this.gl.FLOAT, 
+             false,
+             0,
+             0
+        );
 
         this.resize();
 
@@ -68,6 +83,7 @@ class scene2D {
         });
 
     }
+    
 
     click(e){
         var x = (e.pageX - this.gl.canvas.offsetLeft);
@@ -80,26 +96,13 @@ class scene2D {
     drawBuffer(buffer){
       
         this.buffer = buffer;
-    
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
 
         this.gl.bufferData(
             this.gl.ARRAY_BUFFER, 
             new Float32Array(buffer.vertices), 
             this.gl.STATIC_DRAW
         );
-        var model_coord = this.gl.getAttribLocation(this.modelProgram, "coordinates");
 
-        this.gl.vertexAttribPointer(
-             model_coord,
-             2, 
-             this.gl.FLOAT, 
-             false,
-             0,
-             0
-        );
-
-        this.gl.enableVertexAttribArray(model_coord);
         this.draw();
     }
 
@@ -189,8 +192,6 @@ class scene2D {
 
     clear(){
         this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
-        this.gl.enable(this.gl.DEPTH_TEST);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     }
 
     destroy(){

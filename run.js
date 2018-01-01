@@ -25,19 +25,26 @@ switch(process.argv[2]){
                     res.write(mem);
                     break;
                 case '':
-                case 'index.html':
+                case 'point.html':
                     res.writeHead(200, { 'Content-Type': 'text/html' });
-                    res.write(fs.readFileSync('./serve/index.html'));
+                    res.write(fs.readFileSync('./serve/point.html'));
+                    break;
+                case 'triangle.html':
+                    res.writeHead(200, { 'Content-Type': 'text/html' });
+                    res.write(fs.readFileSync('./serve/triangle.html'));
                     break;
                 case 'script':
                     if (t[2] && fs.existsSync('./serve/script/' + t[2])) {
                         res.writeHead(200, { 'Content-Type': 'text/plain' });
                         res.write(fs.readFileSync('./serve/script/' + t[2]));
-                    }else{
-                        res.end();
                     }
                     break;
-            
+                case 'ressource':
+                    if(t[2] == 'icon.png'){
+                        res.writeHead(200, { 'Content-Type': 'image/png' });
+                        res.write(fs.readFileSync('./serve/ressource/icon.png'));
+                    }
+                    break;
             }
             res.end();
         }).listen(8080);
