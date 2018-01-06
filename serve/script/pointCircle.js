@@ -7,21 +7,24 @@ const programShader = [
         varying  vec4 color;
         varying  vec4 colorExt;
         void main(){
-            float a = 0.0;
-            float r = 0.0, delta = 0.0, alpha = 1.0;
-            float border = 0.45;
+            float r = 0.0, delta = 0.0, alpha = 1.0, mixColor = 1.0;
+            float border = 0.65;
             vec2 cxy = 2.0 * gl_PointCoord - 1.0;
             r = dot(cxy, cxy);
-            delta = fwidth(r);
+            gl_FragColor =  color;
             if (r>(border)) {
+                delta = fwidth(r);
                 alpha = 1.0 - smoothstep(1.0 - delta, 1.0 + delta,r);
                 gl_FragColor = colorExt * alpha;
             }
-            else if (r>(border-delta)){
-                gl_FragColor =  mix(color,colorExt, r) ;
-            }else{
-                gl_FragColor = color; 
-            }
+            else {
+                cxy = cxy/border;
+                r = dot(cxy, cxy);
+                delta = fwidth(r);
+                mixColor = 1.0 - smoothstep(1.0 - delta, 1.0 + delta,r);
+                    gl_FragColor =  mix( colorExt,color,mixColor);
+//                    gl_FragColor.a = 1.0;
+            }    
         }
     `,
     `            
@@ -33,7 +36,6 @@ const programShader = [
         void main(){
             float a = 0.0;
             float r = 0.0, delta = 0.0, alpha = 1.0;
-            float border = 0.45;
             vec2 cxy = 2.0 * gl_PointCoord - 1.0;
             r = dot(cxy, cxy);
             delta = fwidth(r);
