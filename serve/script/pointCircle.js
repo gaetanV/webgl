@@ -82,8 +82,14 @@ class pointCircle {
                 varying  float pointSize;
                 varying  vec4 color;
                 varying  vec4 colorExt;
+                uniform vec2 u_trans;
                 void main(){
-                    gl_Position =  vec4(vPosition, 1.0);
+                    gl_Position =  vec4(
+                        (vPosition.x * u_trans.x) - 1.0,
+                        -((vPosition.y * u_trans.y) - 1.0),
+                         1.0, 
+                         1.0
+                    );
                     gl_PointSize = vPointSize;
                     color = vRgbaColor;
                     colorExt = vec4(1.0,1.0,1.0,1.0);
@@ -194,6 +200,13 @@ class pointCircle {
         this.gl.canvas.width = this.gl.canvas.offsetWidth;
         this.gl.canvas.height = this.gl.canvas.offsetHeight;
         this.gl.viewport(0,0,this.gl.canvas.width,this.gl.canvas.height);
+        this.gl.uniform2fv(
+            this.gl.getUniformLocation(this.modelProgram, "u_trans"),
+            [
+                2/this.gl.canvas.width, 
+                2/this.gl.canvas.height
+            ]
+        );
     }
 
     click(e) {

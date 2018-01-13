@@ -22,8 +22,8 @@
 
         <script>
             var canvas  = document.getElementById('glCanvas');
-            var randomPoint = () => 1.0-Math.random()*2.0;
-
+            var randomPointX = () => Math.random()*canvas.width;
+            var randomPointY = () => Math.random()*canvas.height;
 
             function stroke(nbPoint){
                 var PointCircleStroke = new pointCircle(canvas,0);
@@ -34,15 +34,15 @@
 
            
                     buffer.addCircle(
-                        randomPoint(),
-                        randomPoint(),
+                        randomPointX(),
+                        randomPointY(),
                         14.0,
                         [0, 125, 125]
                     );
 
                     buffer.addCircle(
-                        randomPoint(),
-                        randomPoint(),
+                        randomPointX(),
+                        randomPointY(),
                         14.0,
                         [255, 125, 6]
                     );
@@ -63,8 +63,8 @@
 
                 for(var i = 0; i< nbPoint/2; i++){
 
-                    var a = randomPoint();
-                    var b = randomPoint();
+                    var a = randomPointX();
+                    var b = randomPointY();
 
                     buffer.addCircle(
                         a,
@@ -83,8 +83,8 @@
 
                 for(var i = 0; i< nbPoint/2; i++){
 
-                    var a = randomPoint();
-                    var b = randomPoint();
+                    var a = randomPointX();
+                    var b = randomPointY();
 
                     buffer.addCircle(
                         a,
@@ -122,8 +122,8 @@
 
                     for(var i = 0; i< nbPoint/2; i++){
 
-                        var a = randomPoint();
-                        var b = randomPoint();
+                        var a = randomPointX();
+                        var b = randomPointY();
 
                         buffer.addCircle(
                             a,
