@@ -1,5 +1,6 @@
 /**/.idea/*
 /**/.vscode/*
+/serve/wasm/*.js
 
 package-lock.json
 /test/

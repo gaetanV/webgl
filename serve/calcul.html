@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>HELLO C</title>
+  </head>
+  <body>
+    <div id="html"></div>
+    <script type='text/javascript'>
+
+    const memory = new WebAssembly.Memory({ initial: 256, maximum: 256 });
+    const importObj = {
+        env: {
+            abortStackOverflow: () => { throw new Error('overflow'); },
+            table: new WebAssembly.Table({ initial: 0, maximum: 0, element: 'anyfunc' }),
+            tableBase: 0,
+            memory: memory,
+            memoryBase: 1024,
+            STACKTOP: 0,
+            STACK_MAX: memory.buffer.byteLength,
+        }
+    };
+    fetch('wasm/calcul.wasm').then((response) => response.arrayBuffer())
+        .then((bytes) => WebAssembly.instantiate(bytes, importObj))
+        .then((wa) =>  document.getElementById('html').innerHTML=wa.instance.exports._add(5,5));
+    </script>
+   
+  </body>
+</html>

@@ -22,8 +22,8 @@ const programShader = [
                 r = dot(cxy, cxy);
                 delta = fwidth(r);
                 mixColor = 1.0 - smoothstep(1.0 - delta, 1.0 + delta,r);
-                    gl_FragColor =  mix( colorExt,color,mixColor);
-//                    gl_FragColor.a = 1.0;
+                gl_FragColor =  mix( colorExt,color,mixColor);
+//              gl_FragColor.a = 1.0;
             }    
         }
     `,
@@ -112,8 +112,6 @@ class pointCircle {
         this.gl.attachShader(this.modelProgram, f1);
        
         this.gl.linkProgram(this.modelProgram);
-        this.gl.useProgram(this.modelProgram);
-
      
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.point_buffer);
         var vPosition = this.gl.getAttribLocation(this.modelProgram, "vPosition");
@@ -193,13 +191,16 @@ class pointCircle {
     }
 
     draw() {
-        this.gl.drawArrays(this.gl.GL_POINTS, 0, this.nbPoint);
-    }
+        this.gl.useProgram(this.modelProgram);
 
-    resize() {
-        this.gl.canvas.width = this.gl.canvas.offsetWidth;
-        this.gl.canvas.height = this.gl.canvas.offsetHeight;
-        this.gl.viewport(0,0,this.gl.canvas.width,this.gl.canvas.height);
+        this.gl.activeTexture(this.gl.TEXTURE0 + 0);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
+
+        this.gl.uniform1i(
+            this.gl.getUniformLocation(this.modelProgram, "texture")
+           , 0
+        );
+        
         this.gl.uniform2fv(
             this.gl.getUniformLocation(this.modelProgram, "u_trans"),
             [
@@ -207,6 +208,15 @@ class pointCircle {
                 2/this.gl.canvas.height
             ]
         );
+
+        this.gl.drawArrays(this.gl.GL_POINTS, 0, this.nbPoint);
+    }
+
+    resize() {
+        this.gl.canvas.width = this.gl.canvas.offsetWidth;
+        this.gl.canvas.height = this.gl.canvas.offsetHeight;
+        this.gl.viewport(0,0,this.gl.canvas.width,this.gl.canvas.height);
+    
     }
 
     click(e) {
@@ -228,7 +238,7 @@ class pointCircle {
     loadTexture(url) {
         function isPowerOf2(value) { return (value & (value - 1)) == 0 }
 
-        const texture = this.gl.createTexture();
+        this.texture = this.gl.createTexture();
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
 
         const level = 0;
@@ -240,25 +250,13 @@ class pointCircle {
         const srcType = this.gl.UNSIGNED_BYTE;
         const pixelData = new Uint8Array([255, 255, 255, 255]);  
 
-        var unity = 0;
-
         this.gl.texImage2D(this.gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixelData)
-        
-        this.gl.activeTexture(this.gl.TEXTURE0 + unity);
-
-        
-        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-
-        this.gl.uniform1i(
-             this.gl.getUniformLocation(this.modelProgram, "texture")
-            , unity
-        );
-
+    
         return new Promise((resolve)=>{
 
             const image = new Image();
             image.onload = () => {
-                this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+                this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
                 this.gl.texImage2D(this.gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image)
                 
                 if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
