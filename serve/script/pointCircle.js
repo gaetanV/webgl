@@ -23,7 +23,6 @@ const programShader = [
                 delta = fwidth(r);
                 mixColor = 1.0 - smoothstep(1.0 - delta, 1.0 + delta,r);
                 gl_FragColor =  mix( colorExt,color,mixColor);
-//              gl_FragColor.a = 1.0;
             }    
         }
     `,

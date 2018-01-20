@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script>
+                const nbHit = 5120*2880; //5K
+                const nbThread = 12;
+                const frag = nbHit/nbThread;
+                var workersHit = [];
+        
+                var preload = new Worker('./worker/preload.js');
+        
+                preload.onmessage = function(e) {
+                    hitpoint = e.data;
+                    console.log("preload");
+               
+                    console.time("time");
+             
+                    for(var i =0; i<nbThread; i++) {
+                        workersHit[i].postMessage(hitpoint.slice(i*frag, i+1*frag));
+                    }
+        
+                }
+                preload.postMessage(nbHit);
+        
+                for(var i =0; i<nbThread; i++) {
+                    var a = new Worker('./worker/hit.js');
+                    workersHit.push( a) ;
+                    a.onmessage = function(e) {
+                        console.log("hit");
+                        console.log(hitpoint[e.data]);
+                        console.timeEnd("time");
+                        for(var i =0; i<nbThread; i++) {
+                            workersHit[i].terminate();
+                        }
+                  
+                    }
+                }
+                
+            </script>
+    </head>
+    <body></body>
+</html>
+
+
+
