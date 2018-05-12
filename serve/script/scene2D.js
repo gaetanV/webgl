@@ -2,7 +2,8 @@ class scene2D {
     
     constructor(canvas){
    
-        this.gl = canvas.getContext('experimental-webgl');
+        this.gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
         this.gl.canvas.addEventListener('click',this.click.bind(this));
 
         this.buffer = [];
@@ -73,6 +74,8 @@ class scene2D {
              0,
              0
         );
+        
+        this.gl.useProgram(null);
 
         this.resize();
 
@@ -83,7 +86,7 @@ class scene2D {
         });
 
     }
-    
+
 
     click(e){
         var x = (e.pageX - this.gl.canvas.offsetLeft);
@@ -107,7 +110,27 @@ class scene2D {
     }
 
     draw(){
+        this.gl.useProgram(this.modelProgram);
+        
         if(!this.buffer.position) { return ;}
+
+        var t= 130/this.gl.canvas.width;
+        
+        this.gl.uniform2fv(
+            this.gl.getUniformLocation(this.modelProgram, "u_ratio"),
+             [
+                 t,
+                 this.gl.canvas.width/this.gl.canvas.height*t
+             ]
+        );
+        this.gl.uniform2fv(
+            this.gl.getUniformLocation(this.modelProgram, "u_trans"),
+            [
+                2/this.gl.canvas.width, 
+                2/this.gl.canvas.height
+            ]
+        );
+
 
         this.event={
             click: [],
@@ -171,27 +194,12 @@ class scene2D {
         this.gl.canvas.width = this.gl.canvas.offsetWidth;
         this.gl.canvas.height = this.gl.canvas.offsetHeight;
         this.gl.viewport(0,0,this.gl.canvas.width,this.gl.canvas.height);
-      
-        var t= 130/this.gl.canvas.width;
-
-        this.gl.uniform2fv(
-            this.gl.getUniformLocation(this.modelProgram, "u_ratio"),
-             [
-                 t,
-                 this.gl.canvas.width/this.gl.canvas.height*t
-             ]
-        );
-        this.gl.uniform2fv(
-            this.gl.getUniformLocation(this.modelProgram, "u_trans"),
-            [
-                2/this.gl.canvas.width, 
-                2/this.gl.canvas.height
-            ]
-        );
+   
     }
 
     clear(){
-        this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
+        this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
     }
 
     destroy(){

@@ -1,61 +1,10 @@
-const programShader = [
-
-    `            
-        #extension GL_OES_standard_derivatives : enable
-        precision lowp float;
-        varying  float pointSize;
-        varying  vec4 color;
-        varying  vec4 colorExt;
-        void main(){
-            float r = 0.0, delta = 0.0, alpha = 1.0, mixColor = 1.0;
-            float border = 0.65;
-            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-            r = dot(cxy, cxy);
-            gl_FragColor =  color;
-            if (r>(border)) {
-                delta = fwidth(r);
-                alpha = 1.0 - smoothstep(1.0 - delta, 1.0 + delta,r);
-                gl_FragColor = colorExt * alpha;
-            }
-            else {
-                cxy = cxy/border;
-                r = dot(cxy, cxy);
-                delta = fwidth(r);
-                mixColor = 1.0 - smoothstep(1.0 - delta, 1.0 + delta,r);
-                gl_FragColor =  mix( colorExt,color,mixColor);
-            }    
-        }
-    `,
-    `            
-        #extension GL_OES_standard_derivatives : enable
-        precision lowp float;
-        varying  float pointSize;
-        varying  vec4 color;
-        varying  vec4 colorExt;
-        void main(){
-            float a = 0.0;
-            float r = 0.0, delta = 0.0, alpha = 1.0;
-            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-            r = dot(cxy, cxy);
-            delta = fwidth(r);
-            alpha = 1.0 - smoothstep(1.0 - delta, 1.0 + delta,r);
-            gl_FragColor = color * alpha;
-            
-        }
-    `
-];
-
-class pointCircle {
+class pointCircleTexture {
     
     constructor(canvas,index){
         this.nbPoint = 0;
-
-        this.gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-
+        this.texture = [];
+        this.gl = canvas.getContext('webgl',{alpha:true,antialias: true}) || canvas.getContext('experimental-webgl',{alpha:true,antialias: true});
         this.gl.canvas.addEventListener('click',this.click.bind(this));
-
-        this.gl.getExtension('GL_OES_standard_derivatives');
-        this.gl.getExtension('OES_standard_derivatives');
 
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA); 
         this.gl.enable(this.gl.BLEND);
@@ -67,8 +16,8 @@ class pointCircle {
         this.mixModelProgram =[
             `
                 attribute vec3 vPosition;
-                attribute vec4 vRgbaColor;
                 attribute float vPointSize;
+
                 varying  float pointSize;
                 varying  vec4 color;
                 varying  vec4 colorExt;
@@ -81,15 +30,20 @@ class pointCircle {
                          1.0
                     );
                     gl_PointSize = vPointSize;
-                    color = vRgbaColor;
-                    colorExt = vec4(1.0,1.0,1.0,1.0);
                 }
             `,
-            programShader[index]
+            `            
+                precision lowp float;
+                varying  float pointSize;
+        
+                uniform sampler2D texture0;
+                void main(){
+                    gl_FragColor = texture2D(texture0, gl_PointCoord) ;
+                }
+            `
         ]
 
-        
-        
+
         this.modelProgram = this.gl.createProgram();
 
         var v1 = this.gl.createShader(this.gl.VERTEX_SHADER)
@@ -110,18 +64,6 @@ class pointCircle {
         this.gl.vertexAttribPointer(
             vPosition,
             3, 
-            this.gl.FLOAT, 
-            false,
-            0,
-            0
-        );
-
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.color_buffer);
-        var vRgbaColor = this.gl.getAttribLocation(this.modelProgram, "vRgbaColor");
-        this.gl.enableVertexAttribArray(vRgbaColor);
-        this.gl.vertexAttribPointer(
-            vRgbaColor,
-            4, 
             this.gl.FLOAT, 
             false,
             0,
@@ -149,8 +91,7 @@ class pointCircle {
             this.clear();
             this.draw();
         });
-
-    
+        
     }
 
     drawBuffer(
@@ -168,13 +109,6 @@ class pointCircle {
             this.gl.STATIC_DRAW
         );
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.color_buffer);
-        this.gl.bufferData(
-            this.gl.ARRAY_BUFFER, 
-            color, 
-            this.gl.STATIC_DRAW
-        );
-
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.size_buffer);
         this.gl.bufferData(
             this.gl.ARRAY_BUFFER, 
@@ -187,9 +121,13 @@ class pointCircle {
     draw() {
         this.gl.useProgram(this.modelProgram);
 
+        var i=0;
+
+        this.gl.activeTexture(this.gl.TEXTURE0 + i);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture[i]);
         this.gl.uniform1i(
-            this.gl.getUniformLocation(this.modelProgram, "texture")
-           , 0
+            this.gl.getUniformLocation(this.modelProgram, 'texture' + i)
+            , i
         );
         
         this.gl.uniform2fv(
@@ -207,7 +145,6 @@ class pointCircle {
         this.gl.canvas.width = this.gl.canvas.offsetWidth;
         this.gl.canvas.height = this.gl.canvas.offsetHeight;
         this.gl.viewport(0,0,this.gl.canvas.width,this.gl.canvas.height);
-    
     }
 
     click(e) {
@@ -226,5 +163,45 @@ class pointCircle {
         this.gl.useProgram(null);
         this.gl.deleteProgram(this.modelProgram);
     }
+
+    preload(url) {
+        return new Promise(resolve => {
+            this.loadTexture(this.gl, url).then((t) => {
+                this.texture[0] = t;
+                resolve();
+            });
+        });
+    }
+    
+    loadTexture(gl, url) {
+
+        function isPowerOf2(value) {
+            return (value & (value - 1)) === 0;
+        }
+
+        return new Promise((resolve) => {
+            const image = new Image();
+            image.onload = () => {
+
+                const texture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+                if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+                    gl.generateMipmap(gl.TEXTURE_2D);
+                } else {
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                }
+
+                resolve(texture);
+            };
+            image.src = url;
+        });
+
+}
   
 }

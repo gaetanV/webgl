@@ -15,6 +15,7 @@
             }
         </style>
         <script src="./script/pointCircle.js"></script>
+        <script src="./script/pointCircleTexture.js"></script>
         <script src="./script/bufferPoint.js"></script>
     </head>
     <body>
@@ -112,12 +113,10 @@
             function texture(nbPoint){
 
                 
-                var PointCircleStroke = new pointCircle(canvas,2);
+                var PointCircleStroke = new pointCircleTexture(canvas);
 
-                PointCircleStroke.loadTexture("./ressource/icon.png").then(()=>{
+                PointCircleStroke.preload("./ressource/icon.png").then(()=>{
 
-          
- 
                     var buffer = new bufferPoint(nbPoint*2);
 
                     for(var i = 0; i< nbPoint/2; i++){
@@ -146,9 +145,9 @@
             }
 
             console.time("time");
-            stroke(50000);
+            //stroke(50000);
             //strokeDouble(50000);
-            //texture(50000);
+            texture(50000);
             console.timeEnd("time");
         </script>
     </body>
